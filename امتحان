@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار تفاعلي: ترميم البردي والصور الجدارية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+        }
+        .correct {
+            background-color: #22c55e !important; /* green-500 */
+            color: white !important;
+            border-color: #16a34a !important; /* green-600 */
+        }
+        .incorrect {
+            background-color: #ef4444 !important; /* red-500 */
+            color: white !important;
+            border-color: #dc2626 !important; /* red-600 */
+        }
+        .btn-disabled {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-container" class="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-6 md:p-8 transition-all duration-300">
+        
+        <!-- Start Screen -->
+        <div id="start-screen" class="text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">اختبار في ترميم الآثار</h1>
+            <p class="text-slate-600 mb-8">اختبر معلوماتك حول عوامل تلف وعلاج البردي والصور الجدارية. يتكون الاختبار من 50 سؤالًا.</p>
+            <button id="start-btn" class="w-full bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg text-lg hover:bg-cyan-700 transition-colors shadow-md">
+                ابدأ الاختبار
+            </button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2 text-slate-600">
+                    <p>سؤال <span id="question-number"></span> من 50</p>
+                    <p>النتيجة: <span id="score">0</span></p>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-cyan-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <h2 id="question-text" class="text-2xl font-bold text-slate-800 mb-6 min-h-[100px]"></h2>
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Options will be inserted here by JavaScript -->
+            </div>
+             <div id="feedback" class="mt-6 text-center text-xl font-bold"></div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">انتهى الاختبار!</h1>
+            <p class="text-slate-600 mb-2 text-2xl">نتيجتك النهائية هي:</p>
+            <p id="final-score" class="text-5xl font-bold text-cyan-600 mb-8"></p>
+            <p id="final-message" class="text-xl text-slate-700 mb-8"></p>
+            <button id="restart-btn" class="w-full bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg text-lg hover:bg-cyan-700 transition-colors shadow-md">
+                إعادة الاختبار
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        const questions = [
+            // أسئلة الصح والخطأ
+            { question: "يتكون الهواء الجوي النقي بشكل أساسي من الأكسجين والنيتروجين فقط.", options: ["صح", "خطأ"], answer: "خطأ" },
+            { question: "اللجنين والحموضة يعتبران من وسائل مقاومة التلوث الجوي للبردي.", options: ["صح", "خطأ"], answer: "خطأ" },
+            { question: "يجب ألا تزيد الإضاءة في المتاحف عن 50 لوكس للبردي.", options: ["صح", "خطأ"], answer: "صح" },
+            { question: "انخفاض الرطوبة النسبية يؤدي إلى تكوين الفطريات على ورق البردي.", options: ["صح", "خطأ"], answer: "خطأ" },
+            { question: "الحرارة المرتفعة تزيد من مرونة أوراق البردي.", options: ["صح", "خطأ"], answer: "خطأ" },
+            { question: "الظروف المناسبة لحفظ الورق هي حرارة 20°م ورطوبة نسبية 55%.", options: ["صح", "خطأ"], answer: "صح" },
+            { question: "النمل الأبيض والصراصير يتغذيان على السيليلوز والمواد اللاصقة العضوية في البردي.", options: ["صح", "خطأ"], answer: "صح" },
+            { question: "البكتيريا تحتاج لرطوبة منخفضة (أقل من 50%) لتنمو على البردي.", options: ["صح", "خطأ"], answer: "خطأ" },
+            { question: "الأكتينوميسينات هي كائنات دقيقة ذاتية التغذية.", options: ["صح", "خطأ"], answer: "خطأ" },
+            { question: "سوء التخزين ومحاولات الترميم غير المتخصصة تعتبر من عوامل التلف البشري للبردي.", options: ["صح", "خطأ"], answer: "صح" },
+            { question: "يستخدم الأسيتون أو محلول النشادر المخفف لإزالة بقع الزيوت من البردي.", options: ["صح", "خطأ"], answer: "خطأ" },
+            { question: "يمكن إزالة بقع الشمع باستخدام الكيروسين أو الهكسان.", options: ["صح", "خطأ"], answer: "صح" },
+            { question: "إنزيم الأميليز يستخدم لهضم وتكسير البروتينات في عمليات التنظيف.", options: ["صح", "خطأ"], answer: "خطأ" },
+            { question: "طريقة التبخير بالثيمول تتضمن تعليق صندوق به لمبة بقوة 40 فولت لمعالجة البردي.", options: ["صح", "خطأ"], answer: "صح" },
+            { question: "تعالج حموضة البردي باستخدام محلول 3% من هيدروكسيد الصوديوم في الماء.", options: ["صح", "خطأ"], answer: "خطأ" },
+            { question: "محلول 'البيداكريل' هو أحد المواد المستخدمة لتقوية ورق البردي الضعيف.", options: ["صح", "خطأ"], answer: "صح" },
+            { question: "أفضل درجة حرارة لحفظ الصور الجدارية هي ما بين 16-24 درجة مئوية.", options: ["صح", "خطأ"], answer: "صح" },
+            { question: "ارتفاع درجة الحرارة في مقبرة نفرتاري أدى إلى تحويل طبقة الجبس إلى مادة الأنهيدريت.", options: ["صح", "خطأ"], answer: "صح" },
+            { question: "القرب من البحر لا يؤثر على الصور الجدارية بسبب وجود الأملاح.", options: ["صح", "خطأ"], answer: "خطأ" },
+            { question: "التنظيف الميكانيكي للصور الجدارية يتم دائمًا من أسفل إلى أعلى.", options: ["صح", "خطأ"], answer: "خطأ" },
+            { question: "يمكن إضافة الكحول الإيثيلي للماء عند استخدامه في تنظيف الصور الجدارية.", options: ["صح", "خطأ"], answer: "صح" },
+            { question: "المنظفات الصناعية تستخدم لإزالة بقع الورنيش والأصباغ.", options: ["صح", "خطأ"], answer: "خطأ" },
+            { question: "يستخدم الأسيتون لإزالة البقع العضوية والفورمالدهيد لإزالة بقايا الطحالب.", options: ["صح", "خطأ"], answer: "صح" },
+            { question: "في الترميم المصري التقليدي، تكون مونة الاستكمال أقوى من السطح الأصلي.", options: ["صح", "خطأ"], answer: "خطأ" },
+            { question: "الراتنجات واللدائن الصناعية ساهمت بشكل كبير في حل مشاكل صيانة وترميم الصور الجدارية.", options: ["صح", "خطأ"], answer: "صح" },
+            // أسئلة الاختيار من متعدد
+            { question: "أي من التالي ليس من العوامل الكيميائية المتلفة للبردي؟", options: ["الأكسجين", "الرطوبة", "الشوائب في الهواء", "ثاني أكسيد الكربون"], answer: "الرطوبة" },
+            { question: "تأثير الضوء على ورق البردي يسبب بشكل أساسي:", options: ["تحلل مائي", "نمو فطري", "اصفرار وبهتان", "تآكل حشري"], answer: "اصفرار وبهتان" },
+            { question: "الرطوبة النسبية المثلى لحفظ ورق البردي هي:", options: ["30%", "45%", "55%", "75%"], answer: "55%" },
+            { question: "ما هو الأثر الرئيسي الذي تسببه حشرة النمل الأبيض للبردي؟", options: ["بقع ملونة", "تكسير السليلوز", "عفن", "جفاف وكرمشة"], answer: "تكسير السليلوز" },
+            { question: "لإزالة بقع الألوان الزيتية القديمة من البردي، يُستخدم مخلوط من:", options: ["الأسيتون + النشادر", "الكحول + البنزين", "الهكسان + الطولوين", "الماء + الصابون"], answer: "الكحول + البنزين" },
+            { question: "لإزالة بقع العفن الفطري، يمكن استخدام حمض الأكساليك بتركيز:", options: ["1%", "5%", "15%", "20%"], answer: "5%" },
+            { question: "لإزالة أشرطة السلوتيب اللاصقة، أي من المذيبات التالية لا يُستخدم؟", options: ["رابع كلوريد الكربون", "البنزين", "الكحول الإيثيلي", "الكلوروفورم"], answer: "الكحول الإيثيلي" },
+            { question: "إنزيم الكولاجينيز يعمل كعامل مساعد لهضم وتكسير:", options: ["النشويات", "البروتين", "الدهون", "السليلوز"], answer: "البروتين" },
+            { question: "في عملية تعقيم البردي بالملامسة، يتم كبس البردي بين ورق معالج بمحلول:", options: ["الفورمالدهيد", "هيدروكسيد الباريوم", "الصمغ العربي", "الثيمول"], answer: "الثيمول" },
+            { question: "أي من المحاليل التالية لا يستخدم في تقوية البردي الضعيف؟", options: ["كربوكسي ميثيل سيليوز", "بيداكريل", "هيدروكسيد الباريوم", "صمغ عربي مع جلسرين"], answer: "هيدروكسيد الباريوم" },
+            { question: "الرطوبة النسبية المناسبة للحفاظ على الصور الجدارية هي:", options: ["30 – 40 %", "45 – 50 %", "55 – 60 %", "70 – 80 %"], answer: "55 – 60 %" },
+            { question: "تأثير الحرارة المرتفعة على الصور الجدارية يمكن أن يحول طبقة الجبس إلى:", options: ["كربونات الكالسيوم", "الأنهيدريت", "السيليكا", "الجرافيت"], answer: "الأنهيدريت" },
+            { question: "أي من التالي ليس من عوامل التلف البيولوجي للصور الجدارية؟", options: ["الفطريات", "النحل والدبابير", "التلوث الجوي", "العناكب"], answer: "التلوث الجوي" },
+            { question: "في عملية التنظيف الميكانيكي للصور الجدارية، تستخدم المشارط والفرش لإزالة:", options: ["بقع الزيوت", "الأملاح الذائبة", "المواد المتكلسة", "بقايا الطحالب"], answer: "المواد المتكلسة" },
+            { question: "لإزالة الأصماغ التي لا تذوب بالأسيتون، يمكن استخدام:", options: ["التولوين", "الكحول الإيثيلي", "الهكسان", "الفورمالدهيد"], answer: "الكحول الإيثيلي" },
+            { question: "الأسلوب التقليدي المصري في استكمال الأجزاء الناقصة بالصور الجدارية يتميز بأن السطح الجديد يكون:", options: ["أقوى من السطح الأصلي", "بنفس مستوى السطح الأصلي", "أعلى من السطح الأصلي", "أقل من السطح الأصلي"], answer: "أقل من السطح الأصلي" },
+            { question: "لإزالة بقع الشحوم والزيوت من البردي، يُفضل استخدام:", options: ["الأسيتون", "الكحول", "الهكسان أو الطولوين", "الماء"], answer: "الهكسان أو الطولوين" },
+            { question: "أي من الخطوات التالية تأتي أولاً في عملية علاج البردي؟", options: ["قياس الأس الهيدروجيني", "إزالة البقع", "التصوير التسجيلي للمخطوط", "التقوية"], answer: "التصوير التسجيلي للمخطوط" },
+            { question: "الضوء الخالي من أي نوع من الأشعة هو الأنسب للبردي؟", options: ["الأشعة تحت الحمراء", "الأشعة فوق البنفسجية", "الأشعة السينية", "أشعة جاما"], answer: "الأشعة فوق البنفسجية" },
+            { question: "أي كائن من التالي يسبب ثقوب وقطوع على هوامش البردي ويترك فضلات تسبب بقعًا؟", options: ["الفطريات", "البكتيريا", "الحشرات", "الأكتينوميسينات"], answer: "الحشرات" },
+            { question: "المادة التي تستخدم لعلاج الحموضة في البردي هي:", options: ["حمض الستريك", "هيدروكسيد الباريوم", "الثيمول", "الأسيتون"], answer: "هيدروكسيد الباريوم" },
+            { question: "التولوين هو مذيب عضوي فعال في إزالة:", options: ["بقع الشمع", "بقايا الطحالب", "الأصباغ", "الورنيش"], answer: "الأصباغ" },
+            { question: "انخفاض الرطوبة الشديد يسبب للبردي:", options: ["نمو بكتيري", "جفاف وكرمشة", "تحلل مائي", "عفن فطري"], answer: "جفاف وكرمشة" },
+            { question: "لماذا يجب أن تكون مونة الترميم أضعف من الأصل في الصور الجدارية؟", options: ["لتوفير التكاليف", "لسهولة إزالتها دون ضرر للأصل", "لجعلها تجف أسرع", "لتقوية الجدار الأصلي"], answer: "لسهولة إزالتها دون ضرر للأصل" }
+        ];
+
+        // جلب عناصر الواجهة
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedback = document.getElementById('feedback');
+        
+        const questionNumber = document.getElementById('question-number');
+        const scoreDisplay = document.getElementById('score');
+        const progressBar = document.getElementById('progress-bar');
+        
+        const finalScore = document.getElementById('final-score');
+        const finalMessage = document.getElementById('final-message');
+
+        // متغيرات حالة الاختبار
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // دالة لبدء الاختبار
+        function startQuiz() {
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            showQuestion();
+        }
+
+        // دالة لعرض السؤال الحالي
+        function showQuestion() {
+            resetState();
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            questionNumber.innerText = currentQuestionIndex + 1;
+            scoreDisplay.innerText = score;
+            progressBar.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+            
+            questionText.innerText = currentQuestion.question;
+
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.innerText = option;
+                button.classList.add('w-full', 'bg-white', 'text-slate-700', 'font-semibold', 'py-3', 'px-4', 'rounded-lg', 'border-2', 'border-slate-300', 'hover:bg-slate-100', 'hover:border-cyan-500', 'transition-all', 'duration-200', 'text-lg');
+                button.addEventListener('click', selectAnswer);
+                optionsContainer.appendChild(button);
+            });
+        }
+        
+        // دالة لإعادة تعيين حالة الأزرار والتعليقات
+        function resetState() {
+            feedback.innerText = '';
+            feedback.classList.remove('text-green-500', 'text-red-500');
+            while (optionsContainer.firstChild) {
+                optionsContainer.removeChild(optionsContainer.firstChild);
+            }
+        }
+
+        // دالة لاختيار الإجابة
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            const correctAnswer = questions[currentQuestionIndex].answer;
+
+            // تعطيل جميع الأزرار بعد الاختيار
+            Array.from(optionsContainer.children).forEach(button => {
+                button.classList.add('btn-disabled');
+            });
+
+            if (selectedBtn.innerText === correctAnswer) {
+                score++;
+                scoreDisplay.innerText = score;
+                selectedBtn.classList.add('correct');
+                feedback.innerText = 'إجابة صحيحة!';
+                feedback.classList.add('text-green-500');
+            } else {
+                selectedBtn.classList.add('incorrect');
+                // -- التعديل المطلوب --
+                // هنا نظهر الإجابة الصحيحة بوضوح عند الخطأ
+                feedback.innerText = `إجابة خاطئة. الإجابة الصحيحة هي: "${correctAnswer}"`;
+                feedback.classList.add('text-red-500');
+                
+                // ونقوم بتلوين الزر الصحيح باللون الأخضر
+                Array.from(optionsContainer.children).forEach(button => {
+                    if (button.innerText === correctAnswer) {
+                        button.classList.add('correct');
+                    }
+                });
+            }
+
+            // الانتقال إلى السؤال التالي بعد فترة قصيرة
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    showQuestion();
+                } else {
+                    showResult();
+                }
+            }, 2500); // زيادة الوقت قليلاً لرؤية الإجابة الصحيحة
+        }
+
+        // دالة لعرض النتيجة النهائية
+        function showResult() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            
+            const percentage = Math.round((score / questions.length) * 100);
+            finalScore.innerText = `${score} / ${questions.length}`;
+            
+            let message = '';
+            if (percentage === 100) {
+                message = 'ممتاز! لديك معرفة كاملة بالموضوع.';
+            } else if (percentage >= 80) {
+                message = 'جيد جدًا! معلوماتك قوية.';
+            } else if (percentage >= 60) {
+                message = 'عمل جيد. يمكنك مراجعة بعض النقاط.';
+            } else {
+                message = 'تحتاج إلى المزيد من المراجعة. حاول مرة أخرى!';
+            }
+            finalMessage.innerText = message;
+        }
+
+        // ربط الأحداث بالأزرار
+        startBtn.addEventListener('click', startQuiz);
+        restartBtn.addEventListener('click', startQuiz);
+
+    </script>
+</body>
+</html>
+
